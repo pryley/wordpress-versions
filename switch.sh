@@ -18,7 +18,7 @@ cd `dirname $0`
 SCRIPT_PATH=`pwd`
 
 WP_CORE_DIR="$SCRIPT_PATH/versions/$WP_VERSION"
-WP_TEST_DIR="$SCRIPT_PATH/tests/$WP_VERSION"
+WP_TESTS_DIR="$SCRIPT_PATH/tests/$WP_VERSION"
 
 download() {
 	if [ `which curl` ]; then
@@ -58,9 +58,9 @@ install_wp() {
 }
 
 install_test_suite() {
-	if [ ! -d $WP_TEST_DIR ]; then
-		mkdir -p $WP_TEST_DIR
-		svn co --quiet https://develop.svn.wordpress.org/tags/${WP_VERSION}/tests/phpunit/includes/ $WP_TEST_DIR/includes
+	if [ ! -d $WP_TESTS_DIR ]; then
+		mkdir -p $WP_TESTS_DIR
+		svn co --quiet https://develop.svn.wordpress.org/tags/${WP_VERSION}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
 	fi
 
 	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
@@ -68,11 +68,11 @@ install_test_suite() {
 	DB_PASS=$(perl -lne 'm{DB_PASSWORD.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
 	DB_HOST=$(perl -lne 'm{DB_HOST.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
 
-	WP_TEST_CONFIG="$WP_TEST_DIR/wp-tests-config.php"
+	WP_TEST_CONFIG="$WP_TESTS_DIR/wp-tests-config.php"
 
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/tags/${WP_VERSION}/wp-tests-config-sample.php $WP_TEST_CONFIG
-		perl -i -pwe "s|dirname.{22}|'${WP_CORE_DIR}'|" $WP_TEST_CONFIG
+		perl -i -pwe "s|dirname.{22}|'${SCRIPT_PATH}/public/wp/'|" $WP_TEST_CONFIG
 		perl -i -pwe "s|youremptytestdbnamehere|${DB_NAME}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|yourusernamehere|${DB_USER}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|yourpasswordhere|${DB_PASS}|" $WP_TEST_CONFIG
