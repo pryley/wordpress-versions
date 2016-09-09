@@ -9,10 +9,6 @@ if ! [[ $WP_VERSION =~ $REGEX_WP3 || $WP_VERSION =~ $REGEX_WP4 ]] ; then
 	WP_VERSION="4.6"
 fi
 
-echo $'\e[1;32m'\
-"switching to WordPress $WP_VERSION"\
-$'\e[0m'
-
 cd `dirname $0`
 
 SCRIPT_PATH=`pwd`
@@ -34,9 +30,17 @@ switch_wp() {
 		wp core download --version=$WP_VERSION --path=$WP_CORE_DIR
 	fi
 
+	# http://misc.flogisoft.com/bash/tip_colors_and_formatting
+	echo "\x1B[1;32mSwitching to WordPress $WP_VERSION\x1B[0m"
+
 	rm -rf $SCRIPT_PATH/public/wp;
 	cp -R $WP_CORE_DIR $SCRIPT_PATH/public/wp
-	perl -i -pwe "s#wordpress_([\d.]+)#'wordpress_$WP_VERSION'#eg" $SCRIPT_PATH/env.php
+
+	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
+	perl -i -pwe "s|${DB_NAME}|wordpress_${WP_VERSION}|" $SCRIPT_PATH/env.php
+
+	rm -f $SCRIPT_PATH/tests/current
+	ln -s $WP_TESTS_DIR $SCRIPT_PATH/tests/current
 }
 
 install_wp() {
@@ -63,10 +67,10 @@ install_test_suite() {
 		svn co --quiet https://develop.svn.wordpress.org/tags/${WP_VERSION}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
 	fi
 
-	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_USER=$(perl -lne 'm{DB_USER.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_PASS=$(perl -lne 'm{DB_PASSWORD.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_HOST=$(perl -lne 'm{DB_HOST.*?([\w.]+)} and print $1' $SCRIPT_PATH/env.php)
+	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
+	DB_USER=$(perl -lne 'm{DB_USER.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
+	DB_PASS=$(perl -lne 'm{DB_PASSWORD.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
+	DB_HOST=$(perl -lne 'm{DB_HOST.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
 
 	WP_TEST_CONFIG="$WP_TESTS_DIR/wp-tests-config.php"
 
