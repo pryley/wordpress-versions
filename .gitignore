@@ -1,0 +1,16 @@
+.*
+!.gitattributes
+!.gitignore
+
+/public/app/mu-plugins/*
+/public/app/plugins/*
+/public/app/themes/*
+/public/app/uploads/*
+/public/wp
+/tests
+/versions
+
+!/public/app/mu-plugins/*.php
+!/public/app/plugins/index.php
+!/public/app/themes/index.php
+!/public/app/uploads/index.php
