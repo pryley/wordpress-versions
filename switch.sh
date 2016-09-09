@@ -1,20 +1,37 @@
 #!/bin/bash
 
-read -e -p 'Enter the WordPress version to switch to (3.7 - 4.6): ' WP_VERSION
+BOLD=`tput bold`
+UNDERLINE=`tput smul`
+NORMAL=`tput sgr0`
+WHITE=`tput setaf 15`
+GREY=`tput setaf 8`
+RED=`tput setaf 9`
+GREEN=`tput setaf 10`
 
-REGEX_WP3='^3.([7-9]+)$'
-REGEX_WP4='^4.([0-6]+)$'
+check_errors() {
+	ERRORS=()
 
-if ! [[ $WP_VERSION =~ $REGEX_WP3 || $WP_VERSION =~ $REGEX_WP4 ]] ; then
-	WP_VERSION="4.6"
-fi
+	# Check that wp is installed
+	if ! which wp > /dev/null; then
+		ERRORS=("${ERRORS[@]}" "==>${WHITE} wp   ${GREY}${UNDERLINE}https://wp-cli.org/#installing${NORMAL}")
+	fi
 
-cd `dirname $0`
+	# Check that perl is installed
+	if ! which perl > /dev/null; then
+		ERRORS=("${ERRORS[@]}" "==>${WHITE} perl ${GREY}${UNDERLINE}https://www.perl.org/get.html${NORMAL}")
+	fi
 
-SCRIPT_PATH=`pwd`
+	if [ ${#ERRORS[@]} -gt 0 ]; then
+		echo "${RED}${BOLD}Error: ${NORMAL}The following commands were not found:"
 
-WP_CORE_DIR="$SCRIPT_PATH/versions/$WP_VERSION"
-WP_TESTS_DIR="$SCRIPT_PATH/tests/$WP_VERSION"
+		for error in "${ERRORS[@]}"
+		do
+			echo $"${error}"
+		done
+
+		exit 1
+	fi
+}
 
 download() {
 	if [ `which curl` ]; then
@@ -30,17 +47,16 @@ switch_wp() {
 		wp core download --version=$WP_VERSION --path=$WP_CORE_DIR
 	fi
 
-	# http://misc.flogisoft.com/bash/tip_colors_and_formatting
-	echo "\x1B[1;32mSwitching to WordPress $WP_VERSION\x1B[0m"
+	echo "${BOLD}${GREEN}Switching to WordPress $WP_VERSION${NORMAL}"
 
-	rm -rf $SCRIPT_PATH/public/wp;
-	cp -R $WP_CORE_DIR $SCRIPT_PATH/public/wp
+	rm -rf $DIR/public/wp;
+	cp -R $WP_CORE_DIR $DIR/public/wp
 
-	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
-	perl -i -pwe "s|${DB_NAME}|wordpress_${WP_VERSION}|" $SCRIPT_PATH/env.php
+	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $DIR/env.php)
+	perl -i -pwe "s|${DB_NAME}|wordpress_${WP_VERSION}|" $DIR/env.php
 
-	rm -f $SCRIPT_PATH/tests/current
-	ln -s $WP_TESTS_DIR $SCRIPT_PATH/tests/current
+	rm -f $DIR/tests/current
+	ln -s $WP_TESTS_DIR $DIR/tests/current
 }
 
 install_wp() {
@@ -67,22 +83,39 @@ install_test_suite() {
 		svn co --quiet https://develop.svn.wordpress.org/tags/${WP_VERSION}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
 	fi
 
-	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_USER=$(perl -lne 'm{DB_USER.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_PASS=$(perl -lne 'm{DB_PASSWORD.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
-	DB_HOST=$(perl -lne 'm{DB_HOST.*?([\w.-]+)} and print $1' $SCRIPT_PATH/env.php)
+	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $DIR/env.php)
+	DB_USER=$(perl -lne 'm{DB_USER.*?([\w.-]+)} and print $1' $DIR/env.php)
+	DB_PASS=$(perl -lne 'm{DB_PASSWORD.*?([\w.-]+)} and print $1' $DIR/env.php)
+	DB_HOST=$(perl -lne 'm{DB_HOST.*?([\w.-]+)} and print $1' $DIR/env.php)
 
 	WP_TEST_CONFIG="$WP_TESTS_DIR/wp-tests-config.php"
 
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/tags/${WP_VERSION}/wp-tests-config-sample.php $WP_TEST_CONFIG
-		perl -i -pwe "s|dirname.{22}|'${SCRIPT_PATH}/public/wp/'|" $WP_TEST_CONFIG
+		perl -i -pwe "s|dirname.{22}|'${DIR}/public/wp/'|" $WP_TEST_CONFIG
 		perl -i -pwe "s|youremptytestdbnamehere|${DB_NAME}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|yourusernamehere|${DB_USER}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|yourpasswordhere|${DB_PASS}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|localhost|${DB_HOST}|" $WP_TEST_CONFIG
 	fi
 }
+
+check_errors
+
+read -e -p 'Enter the WordPress version to switch to (3.7 - 4.6): ' WP_VERSION
+
+REGEX_WP3='^3.([7-9]+)$'
+REGEX_WP4='^4.([0-6]+)$'
+
+if ! [[ $WP_VERSION =~ $REGEX_WP3 || $WP_VERSION =~ $REGEX_WP4 ]] ; then
+	WP_VERSION="4.6"
+fi
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")";pwd)"
+WP_CORE_DIR="$DIR/versions/$WP_VERSION"
+WP_TESTS_DIR="$DIR/tests/$WP_VERSION"
+
+cd $DIR
 
 switch_wp
 install_wp
