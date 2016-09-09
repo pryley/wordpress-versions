@@ -2,6 +2,8 @@
 
 Easily switch between multiple versions of WordPress. Each WordPress version has its own versioned test environment for running unit-tests against.
 
+If you use homebrew to manage your local server installation, I highly suggest [brew-php-switcher](https://github.com/philcook/brew-php-switcher) to easily switch between PHP versions.
+
 In the following examples, we assume the following:
 
 - local DocumentRoot is: `~/Sites`
