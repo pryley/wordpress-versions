@@ -1,5 +1,7 @@
 # wordpress-versions
 
+![](https://cloud.githubusercontent.com/assets/134939/18406221/3ff9fa72-76c8-11e6-8d7e-248d560da38e.gif)
+
 Easily switch between multiple versions of WordPress. Each WordPress version has its own versioned test environment for running unit-tests against.
 
 If you use homebrew to manage your local server installation, I highly suggest [brew-php-switcher](https://github.com/philcook/brew-php-switcher) to easily switch between PHP versions.
