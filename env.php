@@ -27,8 +27,6 @@ define('SECURE_AUTH_SALT', '1pQTF !,dszQp`S}ai~n/BIGZ&~.rP`h<hFBe  |(h7d>3@gju:<
 define('LOGGED_IN_SALT',   '`YU5dm<:/QcNP74$Xrpp^Y%-szo2WMsiFWxZ[y;<D2Y.TdMQn/f/Y,2!aSr(HvX#');
 define('NONCE_SALT',       '2Q^x7+Ph>7A^t1 G(=gG7yLni):TQJ7I0=]k=X+*RS|Dv=dh!zx]~]n:2{AF=tj(');
 
-// define('AUTOMATIC_UPDATER_DISABLED', true);
-// define('DISALLOW_FILE_EDIT', true);
 define('SAVEQUERIES', true);
 define('SCRIPT_DEBUG', true);
 define('WP_DEBUG', true);
