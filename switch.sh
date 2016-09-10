@@ -8,17 +8,26 @@ GREY=`tput setaf 8`
 RED=`tput setaf 9`
 GREEN=`tput setaf 10`
 
+version() {
+	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' '\n' | head -n 4)
+}
+
 check_errors() {
 	ERRORS=()
 
-	# Check that wp is installed
-	if ! which wp > /dev/null; then
-		ERRORS=("${ERRORS[@]}" "==>${WHITE} wp   ${GREY}${UNDERLINE}https://wp-cli.org/#installing${NORMAL}")
+	# Check that mysql is installed
+	if ! which mysql > /dev/null; then
+		ERRORS=("${ERRORS[@]}" "==>${WHITE} mysql ${GREY}${UNDERLINE}https://dev.mysql.com/downloads/mysql/${NORMAL}")
 	fi
 
 	# Check that perl is installed
 	if ! which perl > /dev/null; then
-		ERRORS=("${ERRORS[@]}" "==>${WHITE} perl ${GREY}${UNDERLINE}https://www.perl.org/get.html${NORMAL}")
+		ERRORS=("${ERRORS[@]}" "==>${WHITE} perl  ${GREY}${UNDERLINE}https://www.perl.org/get.html${NORMAL}")
+	fi
+
+	# Check that wp-cli is installed
+	if ! which wp > /dev/null; then
+		ERRORS=("${ERRORS[@]}" "==>${WHITE} wp    ${GREY}${UNDERLINE}https://wp-cli.org/#installing${NORMAL}")
 	fi
 
 	if [ ${#ERRORS[@]} -gt 0 ]; then
@@ -97,6 +106,14 @@ install_test_suite() {
 		perl -i -pwe "s|yourusernamehere|${DB_USER}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|yourpasswordhere|${DB_PASS}|" $WP_TEST_CONFIG
 		perl -i -pwe "s|localhost|${DB_HOST}|" $WP_TEST_CONFIG
+	fi
+
+	if [ $(version $WP_VERSION) -lt $(version 4.5) ]; then
+		MYSQL_VERSION=`mysql -V | grep -Eo "\d+\.\d+\.\d+"`
+		# update the deprecated mysql storage_engine if version is greater than 5.5.2
+		if [ $(version $MYSQL_VERSION) -gt $(version 5.5.2) ]; then
+			perl -i -pwe "s|SET storage_engine |SET default_storage_engine |" "$WP_TESTS_DIR/includes/install.php"
+		fi
 	fi
 }
 
