@@ -54,9 +54,6 @@ switch_wp() {
 
 	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $DIR/env.php)
 	perl -i -pwe "s|${DB_NAME}|wordpress_${WP_VERSION}|" $DIR/env.php
-
-	rm -f $DIR/tests/current
-	ln -s $WP_TESTS_DIR $DIR/tests/current
 }
 
 install_wp() {
@@ -82,6 +79,9 @@ install_test_suite() {
 		mkdir -p $WP_TESTS_DIR
 		svn co --quiet https://develop.svn.wordpress.org/tags/${WP_VERSION}/tests/phpunit/includes/ $WP_TESTS_DIR/includes
 	fi
+
+	rm -f $DIR/tests/current
+	ln -s $WP_TESTS_DIR $DIR/tests/current
 
 	DB_NAME=$(perl -lne 'm{DB_NAME.*?([\w.-]+)} and print $1' $DIR/env.php)
 	DB_USER=$(perl -lne 'm{DB_USER.*?([\w.-]+)} and print $1' $DIR/env.php)
